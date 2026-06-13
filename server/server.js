@@ -1,9 +1,9 @@
 const express = require("express");
-const multer = require("multer");
-const sharp = require("sharp");
 const cors = require("cors");
+const multer = require("multer");
 const fs = require("fs");
 
+const sharp = require("sharp");
 const ffmpeg = require("fluent-ffmpeg");
 const ffmpegPath = require("ffmpeg-static");
 
@@ -26,64 +26,46 @@ app.get("/", (req, res) => {
 
 app.post("/convert-image", upload.single("file"), async (req, res) => {
   try {
-    if (!req.file) return res.status(400).send("No file uploaded");
+    if (!req.file) return res.status(400).send("No file");
 
-    const inputPath = req.file.path;
+    const input = req.file.path;
     const type = (req.query.type || "").toLowerCase();
+    const output = `uploads/out-${Date.now()}.${type}`;
 
-    const outputPath = `uploads/out-${Date.now()}.${type}`;
+    const image = ["jpg","jpeg","png","webp"];
+    const media = ["mp3","wav","mp4","mov","avi","webm"];
 
-    const imageFormats = ["jpg","jpeg","png","webp","avif","tiff","gif"];
-    const mediaFormats = ["mp3","wav","ogg","aac","mp4","webm","avi","mov"];
-
-    // ---------------- IMAGE ----------------
-    if (imageFormats.includes(type)) {
-      let img = sharp(inputPath);
-
-      if (type === "jpg" || type === "jpeg") img = img.jpeg();
-      else if (type === "png") img = img.png();
-      else if (type === "webp") img = img.webp();
-      else if (type === "avif") img = img.avif();
-      else if (type === "tiff") img = img.tiff();
-      else if (type === "gif") img = img.gif();
-
-      await img.toFile(outputPath);
+    if (image.includes(type)) {
+      await sharp(input).toFile(output);
     }
 
-    // ---------------- AUDIO / VIDEO ----------------
-    else if (mediaFormats.includes(type)) {
+    else if (media.includes(type)) {
       await new Promise((resolve, reject) => {
-        ffmpeg(inputPath)
-          .setFfmpegPath(ffmpegPath)
-          .output(outputPath)
-          .on("start", (cmd) => console.log("FFMPEG:", cmd))
+        ffmpeg(input)
+          .output(output)
           .on("end", resolve)
-          .on("error", (err) => {
-            console.log("FFMPEG ERROR:", err.message);
-            reject(err);
-          })
+          .on("error", reject)
           .run();
       });
     }
 
-    // ---------------- INVALID ----------------
     else {
-      return res.status(400).send("unsupported format");
+      return res.status(400).send("bad format");
     }
 
-    res.download(outputPath, () => {
-      fs.unlinkSync(inputPath);
-      fs.unlinkSync(outputPath);
+    res.download(output, () => {
+      fs.unlinkSync(input);
+      fs.unlinkSync(output);
     });
 
-  } catch (err) {
-    console.log("ERROR:", err);
-    res.status(500).send("conversion failed");
+  } catch (e) {
+    console.log(e);
+    res.status(500).send("fail");
   }
 });
 
 const PORT = process.env.PORT || 3001;
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log("backend running on " + PORT);
+  console.log("backend running on", PORT);
 });
