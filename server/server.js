@@ -3,7 +3,6 @@ const multer = require("multer");
 const sharp = require("sharp");
 const cors = require("cors");
 const fs = require("fs");
-const path = require("path");
 
 const ffmpeg = require("fluent-ffmpeg");
 const ffmpegPath = require("ffmpeg-static");
@@ -32,14 +31,12 @@ app.post("/convert-image", upload.single("file"), async (req, res) => {
     const inputPath = req.file.path;
     const type = (req.query.type || "").toLowerCase();
 
-    const outputPath = path.join(
-      "uploads",
-      `out-${Date.now()}.${type}`
-    );
+    const outputPath = `uploads/out-${Date.now()}.${type}`;
+
+    const imageFormats = ["jpg","jpeg","png","webp","avif","tiff","gif"];
+    const mediaFormats = ["mp3","wav","ogg","aac","mp4","webm","avi","mov"];
 
     // ---------------- IMAGE ----------------
-    const imageFormats = ["jpg", "jpeg", "png", "webp", "avif", "tiff", "gif"];
-
     if (imageFormats.includes(type)) {
       let img = sharp(inputPath);
 
@@ -54,25 +51,31 @@ app.post("/convert-image", upload.single("file"), async (req, res) => {
     }
 
     // ---------------- AUDIO / VIDEO ----------------
-    else if (
-      ["mp3", "wav", "ogg", "aac", "mp4", "webm", "avi", "mov"].includes(type)
-    ) {
+    else if (mediaFormats.includes(type)) {
       await new Promise((resolve, reject) => {
         ffmpeg(inputPath)
           .setFfmpegPath(ffmpegPath)
-          .toFormat(type)
+          .output(outputPath)
+          .on("start", (cmd) => console.log("FFMPEG:", cmd))
           .on("end", resolve)
-          .on("error", reject)
-          .save(outputPath);
+          .on("error", (err) => {
+            console.log("FFMPEG ERROR:", err.message);
+            reject(err);
+          })
+          .run();
       });
-    } else {
-      return res.status(400).send("Unsupported format");
+    }
+
+    // ---------------- INVALID ----------------
+    else {
+      return res.status(400).send("unsupported format");
     }
 
     res.download(outputPath, () => {
       fs.unlinkSync(inputPath);
       fs.unlinkSync(outputPath);
     });
+
   } catch (err) {
     console.log("ERROR:", err);
     res.status(500).send("conversion failed");
