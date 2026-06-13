@@ -2,6 +2,11 @@ const express = require("express");
 const multer = require("multer");
 const sharp = require("sharp");
 const cors = require("cors");
+
+app.use(cors({
+  origin: "*"
+}));
+
 const fs = require("fs");
 
 const app = express();
@@ -12,7 +17,7 @@ if (!fs.existsSync("uploads")) {
   fs.mkdirSync("uploads");
 }
 
-const upload = multer({ dest: "uploads/" });
+const upload = multer({ dest: "/tmp" });
 
 app.get("/", (req, res) => {
   res.send("API running");
