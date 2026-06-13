@@ -6,6 +6,11 @@ const fs = require("fs");
 
 const app = express();
 app.use(cors());
+app.use(express.json());
+
+if (!fs.existsSync("uploads")) {
+  fs.mkdirSync("uploads");
+}
 
 const upload = multer({ dest: "uploads/" });
 
@@ -42,6 +47,8 @@ app.post("/convert-image", upload.single("file"), async (req, res) => {
   }
 });
 
-app.listen(3001, () => {
-  console.log("backend running on 3001");
+const PORT = process.env.PORT;
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log("backend running on " + PORT);
 });

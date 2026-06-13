@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+const API = "https://file-converter-2hjk.onrender.com";
+
 export default function App() {
   const [file, setFile] = useState(null);
   const [format, setFormat] = useState("jpg");
@@ -15,7 +17,7 @@ export default function App() {
 
     try {
       const res = await fetch(
-        `http://localhost:3001/convert-image?type=${format}`,
+        `${API}/convert-image?type=${format}`,
         {
           method: "POST",
           body: formData,
@@ -62,10 +64,7 @@ export default function App() {
             style={{ display: "none" }}
             onChange={(e) => setFile(e.target.files[0])}
           />
-
-          <div>
-            {file ? file.name : "Click or drop a file"}
-          </div>
+          <div>{file ? file.name : "Click or drop a file"}</div>
         </label>
 
         <select
