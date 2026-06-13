@@ -3,28 +3,27 @@ const cors = require("cors");
 const multer = require("multer");
 const fs = require("fs");
 const sharp = require("sharp");
+const ffmpeg = require("fluent-ffmpeg");
+const ffmpegPath = require("ffmpeg-static");
 
 const app = express();
 
+ffmpeg.setFfmpegPath(ffmpegPath);
+
 app.use(cors({ origin: "*" }));
 
-const upload = multer({ dest: "uploads/" });
-
-if (!fs.existsSync("uploads")) {
-  fs.mkdirSync("uploads");
-}
+const upload = multer({ dest: "/tmp" });
 
 app.get("/", (req, res) => {
   res.send("API running");
 });
 
+/* ---------------- IMAGE ---------------- */
 app.post("/convert-image", upload.single("file"), async (req, res) => {
   try {
-    if (!req.file) return res.status(400).send("No file");
-
     const input = req.file.path;
     const type = (req.query.type || "jpg").toLowerCase();
-    const output = `uploads/out-${Date.now()}.${type}`;
+    const output = `/tmp/out-${Date.now()}.${type}`;
 
     const img = sharp(input);
 
@@ -37,10 +36,36 @@ app.post("/convert-image", upload.single("file"), async (req, res) => {
       fs.unlinkSync(input);
       fs.unlinkSync(output);
     });
+  } catch (e) {
+    console.log(e);
+    res.status(500).send("error");
+  }
+});
 
-  } catch (err) {
-    console.log(err);
-    res.status(500).send("fail");
+/* ---------------- AUDIO/VIDEO ---------------- */
+app.post("/convert-media", upload.single("file"), async (req, res) => {
+  try {
+    const input = req.file.path;
+    const type = (req.query.type || "mp3").toLowerCase();
+    const output = `/tmp/out-${Date.now()}.${type}`;
+
+    ffmpeg(input)
+      .toFormat(type)
+      .on("end", () => {
+        res.download(output, () => {
+          fs.unlinkSync(input);
+          fs.unlinkSync(output);
+        });
+      })
+      .on("error", (err) => {
+        console.log(err);
+        res.status(500).send("conversion error");
+      })
+      .save(output);
+
+  } catch (e) {
+    console.log(e);
+    res.status(500).send("error");
   }
 });
 
