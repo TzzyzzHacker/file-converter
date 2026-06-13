@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const API = "https://file-converter-2hjk.onrender.com";
+const API = import.meta.env.VITE_API_URL;
 
 export default function App() {
   const [file, setFile] = useState(null);
@@ -33,6 +33,8 @@ export default function App() {
       a.href = url;
       a.download = "converted." + format;
       a.click();
+
+      window.URL.revokeObjectURL(url);
     } catch (err) {
       alert("Error converting file");
     }
