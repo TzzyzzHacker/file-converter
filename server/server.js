@@ -2,17 +2,11 @@ const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
 const fs = require("fs");
-
 const sharp = require("sharp");
-const ffmpeg = require("fluent-ffmpeg");
-const ffmpegPath = require("ffmpeg-static");
-
-ffmpeg.setFfmpegPath(ffmpegPath);
 
 const app = express();
 
 app.use(cors({ origin: "*" }));
-app.use(express.json());
 
 const upload = multer({ dest: "uploads/" });
 
@@ -29,37 +23,23 @@ app.post("/convert-image", upload.single("file"), async (req, res) => {
     if (!req.file) return res.status(400).send("No file");
 
     const input = req.file.path;
-    const type = (req.query.type || "").toLowerCase();
+    const type = (req.query.type || "jpg").toLowerCase();
     const output = `uploads/out-${Date.now()}.${type}`;
 
-    const image = ["jpg","jpeg","png","webp"];
-    const media = ["mp3","wav","mp4","mov","avi","webm"];
+    const img = sharp(input);
 
-    if (image.includes(type)) {
-      await sharp(input).toFile(output);
-    }
-
-    else if (media.includes(type)) {
-      await new Promise((resolve, reject) => {
-        ffmpeg(input)
-          .output(output)
-          .on("end", resolve)
-          .on("error", reject)
-          .run();
-      });
-    }
-
-    else {
-      return res.status(400).send("bad format");
-    }
+    if (type === "jpg" || type === "jpeg") await img.jpeg().toFile(output);
+    else if (type === "png") await img.png().toFile(output);
+    else if (type === "webp") await img.webp().toFile(output);
+    else return res.status(400).send("unsupported");
 
     res.download(output, () => {
       fs.unlinkSync(input);
       fs.unlinkSync(output);
     });
 
-  } catch (e) {
-    console.log(e);
+  } catch (err) {
+    console.log(err);
     res.status(500).send("fail");
   }
 });
