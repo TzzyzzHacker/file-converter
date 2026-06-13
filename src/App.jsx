@@ -74,9 +74,28 @@ export default function App() {
           value={format}
           onChange={(e) => setFormat(e.target.value)}
         >
-          <option value="jpg">JPG</option>
-          <option value="png">PNG</option>
-          <option value="webp">WEBP</option>
+          <optgroup label="Images">
+            <option value="jpg">JPG</option>
+            <option value="png">PNG</option>
+            <option value="webp">WEBP</option>
+            <option value="avif">AVIF</option>
+            <option value="tiff">TIFF</option>
+            <option value="gif">GIF</option>
+          </optgroup>
+
+          <optgroup label="Audio">
+            <option value="mp3">MP3</option>
+            <option value="wav">WAV</option>
+            <option value="ogg">OGG</option>
+            <option value="aac">AAC</option>
+          </optgroup>
+
+          <optgroup label="Video">
+            <option value="mp4">MP4</option>
+            <option value="webm">WEBM</option>
+            <option value="avi">AVI</option>
+            <option value="mov">MOV</option>
+          </optgroup>
         </select>
 
         <button
