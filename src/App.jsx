@@ -16,15 +16,28 @@ export default function App() {
     formData.append("file", file);
 
     try {
-      const res = await fetch(
-        `${API}/convert-image?type=${format}`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const res = await fetch(`${API}/convert-image?type=${format}`, {
+        method: "POST",
+        body: formData,
+      });
 
-      if (!res.ok) throw new Error("convert failed");
+      if (res.status === 403) {
+        alert("Daily limit reached. Upgrade to Pro.");
+        setLoading(false);
+        return;
+      }
+
+      if (res.status === 413) {
+        alert("File too large for free plan.");
+        setLoading(false);
+        return;
+      }
+
+      if (!res.ok) {
+        alert("Conversion failed");
+        setLoading(false);
+        return;
+      }
 
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
@@ -35,8 +48,9 @@ export default function App() {
       a.click();
 
       window.URL.revokeObjectURL(url);
+
     } catch (err) {
-      alert("Error converting file");
+      alert("Server error");
     }
 
     setLoading(false);
@@ -108,6 +122,10 @@ export default function App() {
         >
           {loading ? "Converting..." : "Convert"}
         </button>
+
+        <p style={styles.note}>
+          Free: 5 conversions/day • 10MB max
+        </p>
       </div>
     </div>
   );
@@ -119,7 +137,6 @@ const styles = {
     background: "#0f172a",
     fontFamily: "sans-serif",
   },
-
   navbar: {
     display: "flex",
     justifyContent: "space-between",
@@ -129,11 +146,9 @@ const styles = {
     color: "white",
     borderBottom: "1px solid #1f2937",
   },
-
   logo: {
     fontWeight: "bold",
   },
-
   donate: {
     background: "#22c55e",
     padding: "8px 12px",
@@ -142,7 +157,6 @@ const styles = {
     textDecoration: "none",
     fontWeight: "bold",
   },
-
   card: {
     width: "320px",
     margin: "60px auto",
@@ -152,11 +166,9 @@ const styles = {
     textAlign: "center",
     color: "white",
   },
-
   title: {
     marginBottom: "16px",
   },
-
   uploadBox: {
     display: "block",
     padding: "20px",
@@ -165,13 +177,11 @@ const styles = {
     marginBottom: "12px",
     cursor: "pointer",
   },
-
   select: {
     width: "100%",
     padding: "10px",
     marginBottom: "12px",
   },
-
   button: {
     width: "100%",
     padding: "10px",
@@ -180,5 +190,10 @@ const styles = {
     borderRadius: "8px",
     color: "white",
     fontWeight: "bold",
+  },
+  note: {
+    fontSize: "12px",
+    opacity: 0.6,
+    marginTop: "10px",
   },
 };
