@@ -22,13 +22,13 @@ export default function App() {
       });
 
       if (res.status === 403) {
-        alert("Daily limit reached. Upgrade to Pro.");
+        alert("Free limit reached");
         setLoading(false);
         return;
       }
 
       if (res.status === 413) {
-        alert("File too large for free plan.");
+        alert("File too large");
         setLoading(false);
         return;
       }
@@ -44,11 +44,10 @@ export default function App() {
 
       const a = document.createElement("a");
       a.href = url;
-      a.download = "converted." + format;
+      a.download = `converted.${format}`;
       a.click();
 
       window.URL.revokeObjectURL(url);
-
     } catch (err) {
       alert("Server error");
     }
@@ -80,7 +79,7 @@ export default function App() {
             style={{ display: "none" }}
             onChange={(e) => setFile(e.target.files[0])}
           />
-          <div>{file ? file.name : "Click or drop a file"}</div>
+          <div>{file ? file.name : "Click to upload file"}</div>
         </label>
 
         <select
@@ -116,7 +115,6 @@ export default function App() {
           style={{
             ...styles.button,
             opacity: loading ? 0.6 : 1,
-            cursor: loading ? "not-allowed" : "pointer",
           }}
           onClick={upload}
         >
@@ -124,7 +122,7 @@ export default function App() {
         </button>
 
         <p style={styles.note}>
-          Free: 5 conversions/day • 10MB max
+          Free plan: limited conversions + file size cap
         </p>
       </div>
     </div>
@@ -140,35 +138,28 @@ const styles = {
   navbar: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "center",
     padding: "14px 20px",
     background: "#111827",
     color: "white",
-    borderBottom: "1px solid #1f2937",
   },
-  logo: {
-    fontWeight: "bold",
-  },
+  logo: { fontWeight: "bold" },
   donate: {
     background: "#22c55e",
     padding: "8px 12px",
     borderRadius: "8px",
     color: "black",
     textDecoration: "none",
-    fontWeight: "bold",
   },
   card: {
-    width: "320px",
+    width: "340px",
     margin: "60px auto",
     padding: "24px",
     background: "#111827",
     borderRadius: "12px",
-    textAlign: "center",
     color: "white",
+    textAlign: "center",
   },
-  title: {
-    marginBottom: "16px",
-  },
+  title: { marginBottom: "16px" },
   uploadBox: {
     display: "block",
     padding: "20px",
