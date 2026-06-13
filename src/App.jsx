@@ -12,19 +12,22 @@ export default function App() {
 
     setLoading(true);
 
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const isImage = ["jpg", "png", "webp"].includes(format);
+    const endpoint = isImage ? "convert-image" : "convert-media";
+
     try {
-      const formData = new FormData();
-      formData.append("file", file);
+      const res = await fetch(
+        `${API}/${endpoint}?type=${format}`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
-      const res = await fetch(`${API}/convert-image?type=${format}`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || "convert failed");
-      }
+      if (!res.ok) throw new Error(await res.text());
 
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
@@ -69,7 +72,7 @@ export default function App() {
             style={{ display: "none" }}
             onChange={(e) => setFile(e.target.files?.[0] || null)}
           />
-          <div>{file ? file.name : "Click to select file"}</div>
+          <div>{file ? file.name : "Click or drop file"}</div>
         </label>
 
         <select
@@ -77,9 +80,19 @@ export default function App() {
           value={format}
           onChange={(e) => setFormat(e.target.value)}
         >
-          <option value="jpg">JPG</option>
-          <option value="png">PNG</option>
-          <option value="webp">WEBP</option>
+          <optgroup label="Images">
+            <option value="jpg">JPG</option>
+            <option value="png">PNG</option>
+            <option value="webp">WEBP</option>
+          </optgroup>
+
+          <optgroup label="Audio/Video">
+            <option value="mp3">MP3</option>
+            <option value="wav">WAV</option>
+            <option value="mp4">MP4</option>
+            <option value="avi">AVI</option>
+            <option value="mkv">MKV</option>
+          </optgroup>
         </select>
 
         <button
